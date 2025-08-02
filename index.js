@@ -39,6 +39,14 @@ app.post('/webhook', async (req, res) => {
 
     const userMessage = msg.text
 
+
+    if (userMessage === '/start') {
+        
+        await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, { chat_id: msg.chat.id, text: "Welcome to the Solana bot! Type what you'd like to do." })
+        
+        return res.sendStatus(200);
+    }
+
     const systemPrompt = process.env.systemPrompt
 
     const finalPrompt = `###System: ${systemPrompt} ###User : ${userMessage}`
@@ -58,7 +66,17 @@ app.post('/webhook', async (req, res) => {
 
     const llmOutput = data.response.trim()
 
-    const intent = JSON.parse(llmOutput)
+    let intent;
+
+    try {
+
+        intent = JSON.parse(llmOutput)
+    
+    } catch(e) {
+
+        intent = {command: "none"}
+
+    }
 
     if(intent.command === 'create_wallet') {
 
@@ -117,9 +135,15 @@ app.post('/webhook', async (req, res) => {
 
                 reply = 'Please specify the address to whom you want to transfer'
             
-            } else if(intent.amount === '') {
+            } else if(intent.amount === "") {
 
                 reply = 'Please specify the amount too'
+
+                await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, { chat_id: msg.chat.id, text: reply })
+
+                res.sendStatus(200)
+
+                return
             
             } else {
 
@@ -184,7 +208,7 @@ app.post('/webhook', async (req, res) => {
 
     } else {
 
-        reply = 'Please tell me what to do'
+        let reply = 'Please tell me what to do'
 
         await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, { chat_id: msg.chat.id, text: reply })
 

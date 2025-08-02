@@ -22,7 +22,7 @@ app.post('/register', async (req, res) => {
 
 })
 
-app.get('/get', async (req, res) => {
+app.post('/get', async (req, res) => {
 
     const { user_id } = req.body
     

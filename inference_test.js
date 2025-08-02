@@ -1,6 +1,8 @@
 import 'dotenv/config'  
     
-    const userMessage = 'I want to transfer SOL'
+    // const userMessage = 'I want to transfer SOL'
+
+    const userMessage = 'I want to transfer to 6YuRPBWr7bCsuqqpfyVRWMb4Gi6J6T5YNzgk2tV6Kf38'
 
     // const userMessage = 'I want to transfer Solana to: 5XhKfpXHWpp6sPmt1LFXG4wgovncwmbqYiCnhcARuBKm. 22 solana'
 
