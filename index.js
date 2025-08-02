@@ -182,6 +182,12 @@ app.post('/webhook', async (req, res) => {
 
         await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, { chat_id: msg.chat.id, text: reply })
 
+    } else {
+
+        reply = 'Please tell me what to do'
+
+        await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, { chat_id: msg.chat.id, text: reply })
+
     }
 
     res.sendStatus(200)
