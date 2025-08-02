@@ -22,6 +22,17 @@ app.post('/register', async (req, res) => {
 
 })
 
+app.get('/get', async (req, res) => {
+
+    const { user_id } = req.body
+    
+    const result = await pool.query('SELECT shamir_share from users where user_id = $1', [user_id])
+
+    res.json({ share: result.rows[0].shamir_share })
+
+
+})
+
 app.listen(PORT, () => {
 
     console.log(`Shamere1 server running on PORT: ${PORT}`)

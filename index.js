@@ -3,7 +3,7 @@ import fetch from 'node-fetch'
 import express from 'express'
 import axios from 'axios'
 import pkg from 'pg'
-import { Keypair } from "@solana/web3.js"
+import { Keypair, SystemProgram, Connection, LAMPORTS_PER_SOL, Transaction, PublicKey, sendAndConfirmTransaction } from "@solana/web3.js"
 import sss from 'shamirs-secret-sharing'
 
 const { Pool } = pkg
@@ -15,6 +15,20 @@ app.use(express.json())
 const pool = new Pool({connectionString: process.env.db1})
 
 const PORT = process.env.PORT || 3000
+
+
+function validSolanaAddress(address) {
+
+    try {
+
+        return PublicKey.isOnCurve(address.toBytes())
+
+
+    } catch(e) {
+
+        return false
+    }
+}
 
 
 app.post('/webhook', async (req, res) => {
@@ -82,6 +96,91 @@ app.post('/webhook', async (req, res) => {
         }
 
         await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {chat_id: msg.chat.id, text: reply})
+
+    } else if(intent.command === 'transfer_sol') {
+
+        const { rows } = await pool.query('SELECT pubkey FROM users where telegram_user_id = $1;', [userId])
+
+        let reply;
+
+        if(rows.length === 0) {
+
+            reply = 'You do not have a wallet. Please prompt to create a wallet'
+        
+        } else {
+
+            if(intent.to === "" && intent.amount === "") {
+
+                reply = 'Please specify the address to whom you want to transfer and please specify the amount too'
+            
+            } else if(intent.to === '') {
+
+                reply = 'Please specify the address to whom you want to transfer'
+            
+            } else if(intent.amount === '') {
+
+                reply = 'Please specify the amount too'
+            
+            } else {
+
+
+                const responses = await Promise.all([
+                    
+                    axios.post(process.env.SHAMERE1_GET_URL, { user_id: userId }),
+                    
+                    axios.post(process.env.SHAMERE2_GET_URL, { user_id: userId }),
+                    
+                    axios.post(process.env.SHAMERE3_GET_URL, { user_id: userId }),
+                
+                ])
+
+                const shares = responses.map(resp => Buffer.from(resp.data.share, 'hex'))
+
+                const secret = sss.combine(shares)
+
+                const senderKeypair = Keypair.fromSecretKey(Uint8Array.from(secret))
+
+                const connection = new Connection("https://api.devnet.solana.com")
+
+
+                const recipient = new PublicKey(intent.to)
+
+                const valid = validSolanaAddress(recipient)
+
+                if(!valid) {
+
+                    reply = 'Please enter a valid solana address'
+
+                    await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, { chat_id: msg.chat.id, text: reply })
+
+                    res.sendStatus(200)
+
+                    return
+                
+                }
+                
+                
+                const lamports = Math.floor(Number(intent.amount) * LAMPORTS_PER_SOL)
+
+                const transaction = new Transaction().add(SystemProgram.transfer({
+
+                    fromPubkey: senderKeypair.publicKey,
+                    toPubkey: recipient,
+                    lamports,
+                
+                }))
+
+                const signature = await sendAndConfirmTransaction(connection, transaction, [senderKeypair])
+
+
+                reply = `Transfer of ${intent.amount} SOL to ${intent.to} complete!\nSignature: ${signature}`
+
+                
+            }
+
+        }
+
+        await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, { chat_id: msg.chat.id, text: reply })
 
     }
 

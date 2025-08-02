@@ -1,8 +1,12 @@
 import 'dotenv/config'  
     
-    // const userMessage = 'I want to transfer SOL'
+    const userMessage = 'I want to transfer SOL'
 
-    const userMessage = 'I want to transfer Solana to: 5XhKfpXHWpp6sPmt1LFXG4wgovncwmbqYiCnhcARuBKm'
+    // const userMessage = 'I want to transfer Solana to: 5XhKfpXHWpp6sPmt1LFXG4wgovncwmbqYiCnhcARuBKm. 22 solana'
+
+    // const userMessage = 'I want to transfer Solana to: 5XhKfpXHWpp6sPmt1LFXG4wgovncwmbqYiCnhcARuBKm.'
+
+    // const userMessage = 'I want to transfer 25 Solana.'
 
     const systemPrompt = process.env.systemPrompt
 
