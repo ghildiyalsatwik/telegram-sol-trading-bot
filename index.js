@@ -74,11 +74,17 @@ app.post('/webhook', async (req, res) => {
     
     } catch(e) {
 
+        console.log('Could not parse the llm response as a JSON, handling manually')
+
         intent = {command: "none"}
 
     }
 
+    console.log(intent)
+
     if(intent.command === 'create_wallet') {
+
+        console.log('Inside create wallet block')
 
         const { rows } = await pool.query('SELECT pubkey FROM users where telegram_user_id = $1;', [userId])
 
@@ -115,7 +121,13 @@ app.post('/webhook', async (req, res) => {
 
         await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {chat_id: msg.chat.id, text: reply})
 
+        res.sendStatus(200)
+
+        return
+
     } else if(intent.command === 'transfer_sol') {
+
+        console.log('Inside transfer SOL block')
 
         const { rows } = await pool.query('SELECT pubkey FROM users where telegram_user_id = $1;', [userId])
 
@@ -194,7 +206,32 @@ app.post('/webhook', async (req, res) => {
                 
                 }))
 
-                const signature = await sendAndConfirmTransaction(connection, transaction, [senderKeypair])
+
+                let signature
+
+                try {
+                    
+                    signature = await sendAndConfirmTransaction(connection, transaction, [senderKeypair])
+
+                } catch(e) {
+
+                    console.error('Transaction failed: ', e)
+
+                    reply = `Transaction failed: ${e.message || e}`
+
+
+                    await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
+                        
+                        chat_id: msg.chat.id,
+                        
+                        text: reply
+                    })
+
+                    res.sendStatus(200)
+
+                    return
+
+                }
 
 
                 reply = `Transfer of ${intent.amount} SOL to ${intent.to} complete!\nSignature: ${signature}`
@@ -206,15 +243,88 @@ app.post('/webhook', async (req, res) => {
 
         await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, { chat_id: msg.chat.id, text: reply })
 
+        res.sendStatus(200)
+
+        return
+
+    } else if(intent.command === 'eject') {
+
+        console.log('Inside eject block')
+
+        let reply;
+
+        const { rows } = await pool.query('SELECT pubkey from users where telegram_user_id = $1', [userId])
+
+        if(rows.length === 0) {
+
+            reply = 'You do not have a wallet registered with us'
+
+            await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, { chat_id: msg.chat.id, text: reply })
+
+            res.sendStatus(200)
+
+            return
+
+        }
+
+        let responses
+
+        try {
+
+            responses = await Promise.all([
+
+                axios.post(process.env.SHAMERE1_GET_URL, { user_id: userId }),
+
+                axios.post(process.env.SHAMERE2_GET_URL, { user_id: userId }),
+
+                axios.post(process.env.SHAMERE3_GET_URL, { user_id: userId })
+            ])
+        
+        } catch(e) {
+
+            reply = 'Error in retrieving your private key. Please try again later.'
+
+            await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, { chat_id: msg.chat.id, text: reply });
+            
+            res.sendStatus(200);
+            
+            return
+
+        }
+
+        const shares = responses.map(resp => Buffer.from(resp.data.share, 'hex'))
+
+        const secret = sss.combine(shares)
+
+        const secretHex = secret.toString('hex')
+
+
+        reply = `Here is your private key (please save it securely): \n${secretHex}`
+
+
+        await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
+            
+            chat_id: msg.chat.id,
+            
+            text: reply,
+        })
+
+        res.sendStatus(200);
+    
+        return
+
+
     } else {
+
+        console.log('Inside tell me what to do block')
 
         let reply = 'Please tell me what to do'
 
         await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, { chat_id: msg.chat.id, text: reply })
 
-    }
+        res.sendStatus(200)
 
-    res.sendStatus(200)
+    }
 
 })
 

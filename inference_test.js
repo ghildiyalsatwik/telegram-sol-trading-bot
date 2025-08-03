@@ -2,13 +2,23 @@ import 'dotenv/config'
     
     // const userMessage = 'I want to transfer SOL'
 
-    const userMessage = 'I want to transfer to 6YuRPBWr7bCsuqqpfyVRWMb4Gi6J6T5YNzgk2tV6Kf38'
+    // const userMessage = 'I want to transfer to 6YuRPBWr7bCsuqqpfyVRWMb4Gi6J6T5YNzgk2tV6Kf38'
 
     // const userMessage = 'I want to transfer Solana to: 5XhKfpXHWpp6sPmt1LFXG4wgovncwmbqYiCnhcARuBKm. 22 solana'
 
     // const userMessage = 'I want to transfer Solana to: 5XhKfpXHWpp6sPmt1LFXG4wgovncwmbqYiCnhcARuBKm.'
 
     // const userMessage = 'I want to transfer 25 Solana.'
+
+    // const userMessage = 'I want to eject out of here.'
+
+    // const userMessage = 'I want to send SOL'
+
+    //const userMessage = 'I want to transfer SOL to this address: 6YuRPBWr7bCsuqqpfyVRWMb4Gi6J6T5YNzgk2tV6Kf38'
+
+    const userMessage = 'I want to transfer SOL to: 6YuRPBWr7bCsuqqpfyVRWMb4Gi6J6T5YNzgk2tV6Kf38'
+
+    // const userMessage = 'Create a wallet for me'
 
     const systemPrompt = process.env.systemPrompt
 
