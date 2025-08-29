@@ -47,7 +47,7 @@ app.post('/webhook', async (req, res) => {
         return res.sendStatus(200);
     }
 
-    const systemPrompt = process.env.systemPrompt
+    const systemPrompt = process.env.systemPrompt.replace(/\\n/g, "\n")
 
     const finalPrompt = `###System: ${systemPrompt} ###User : ${userMessage}`
 
@@ -55,7 +55,7 @@ app.post('/webhook', async (req, res) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'llama2',
+          model: 'llama3',
           prompt: finalPrompt,
           stream: false
         
@@ -80,11 +80,7 @@ app.post('/webhook', async (req, res) => {
 
     }
 
-    console.log(intent)
-
     if(intent.command === 'create_wallet') {
-
-        console.log('Inside create wallet block')
 
         const { rows } = await pool.query('SELECT pubkey FROM users where telegram_user_id = $1;', [userId])
 
@@ -249,8 +245,6 @@ app.post('/webhook', async (req, res) => {
 
     } else if(intent.command === 'eject') {
 
-        console.log('Inside eject block')
-
         let reply;
 
         const { rows } = await pool.query('SELECT pubkey from users where telegram_user_id = $1', [userId])
@@ -312,11 +306,36 @@ app.post('/webhook', async (req, res) => {
         res.sendStatus(200);
     
         return
+    
+    } else if(intent.command === "get_balance") {
+
+        let reply
+
+        const connection = new Connection("https://api.devnet.solana.com")
+
+        const { rows } = await pool.query('SELECT pubkey FROM users where telegram_user_id = $1;', [userId])
+
+        if(rows.length > 0) {
+
+            const user_public_key = new PublicKey(rows[0].pubkey)
+
+            const balance = await connection.getBalance(user_public_key)
+            
+            reply = `Your wallet: ${rows[0].pubkey} has SOL balance: ${balance/1e9}`
+
+        } else {
+
+            reply = 'You do not have a wallet yet. Please create a wallet!'
+        }
+
+        await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, { chat_id: msg.chat.id, text: reply });
+            
+        res.sendStatus(200)
+
+        return
 
 
     } else {
-
-        console.log('Inside tell me what to do block')
 
         let reply = 'Please tell me what to do'
 

@@ -26,12 +26,13 @@ import 'dotenv/config'
 
     // const userMessage = 'I want to swap 2 SOL.'
 
-    const userMessage = 'I want to buy PONKE with 2 SOL'
+    // const userMessage = 'I want to buy PONKE with 2 SOL'
+
+    const userMessage = 'What is my balance?'
 
     const systemPrompt = process.env.systemPrompt.replace(/\\n/g, "\n")
 
     const finalPrompt = `###System: ${systemPrompt}
-    
     
     ###User : ${userMessage}`
 
