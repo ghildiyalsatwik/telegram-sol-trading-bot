@@ -16,13 +16,21 @@ import 'dotenv/config'
 
     //const userMessage = 'I want to transfer SOL to this address: 6YuRPBWr7bCsuqqpfyVRWMb4Gi6J6T5YNzgk2tV6Kf38'
 
-    const userMessage = 'I want to transfer SOL to: 6YuRPBWr7bCsuqqpfyVRWMb4Gi6J6T5YNzgk2tV6Kf38'
+    // const userMessage = 'I want to transfer SOL to: 6YuRPBWr7bCsuqqpfyVRWMb4Gi6J6T5YNzgk2tV6Kf38'
+
+    // const userMessage = 'I want to swap .5 SOL for USDC';
+
+    // const userMessage = 'I want to swap SOL with USDT';
 
     // const userMessage = 'Create a wallet for me'
 
-    const systemPrompt = process.env.systemPrompt
+    // const userMessage = 'I want to swap 2 SOL.'
 
-    const finalPrompt = `###System: ${systemPrompt} 
+    const userMessage = 'I want to buy PONKE with 2 SOL'
+
+    const systemPrompt = process.env.systemPrompt.replace(/\\n/g, "\n")
+
+    const finalPrompt = `###System: ${systemPrompt}
     
     
     ###User : ${userMessage}`
@@ -31,7 +39,7 @@ import 'dotenv/config'
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'llama2',
+          model: 'llama3',
           prompt: finalPrompt,
           stream: false
         
